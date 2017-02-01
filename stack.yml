@@ -39,20 +39,20 @@ resources:
         apt-get install -y ansible jq
         ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq --raw-output '.meta["ansible-playbook"]')
 
-  cluster_master:
+  cluster_manager:
     type: OS::Heat::ResourceGroup
     properties:
       count: 2
       resource_def:
         type: OS::Nova::Server
         properties:
-          name: master%index%
+          name: manager%index%
           key_name: {get_param: node_key}
           flavor: {get_param: node_flavor}
           image: {get_param: node_image}
           user_data_format: RAW
           user_data: {get_resource: setup_node}
-          metadata: {ansible-playbook: 'master.yml'}
+          metadata: {ansible-playbook: 'manager.yml'}
           networks:
             - network: {get_param: network}
 
