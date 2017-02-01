@@ -5,5 +5,5 @@
   gather_facts: yes
 
   tasks:
-    - include: tasks/installdocker.yml 
+    - include: tasks/install-docker.yml 
     - shell: docker swarm init

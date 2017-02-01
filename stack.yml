@@ -37,7 +37,7 @@ resources:
         sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
         apt-get update
         apt-get install -y ansible jq
-        ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq '.meta["ansible-role"]')
+        ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq --raw-output '.meta["ansible-role"]')
 
   cluster_master:
     type: OS::Heat::ResourceGroup
