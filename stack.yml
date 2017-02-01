@@ -1,0 +1,88 @@
+---
+
+heat_template_version: 2015-04-30
+
+description: Auto scaling app
+
+parameters:
+  number_of_worker:
+    type: number
+    label: Number of worker
+    default: 3
+  node_flavor:
+    type: string
+    label: Node flavor
+    default: t1.tiny.small-2
+  node_key:
+    type: string
+    label: Node ssh Key
+    default: ael
+  node_image:
+    type: string
+    label: Node image
+    default: "Ubuntu 16.04 Xenial Cloud (kvm)"
+  network:
+    type: string
+    label: Network name
+    default: internal-run
+
+resources:
+  setup_master:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/sh
+        chage -d '' adminomc
+        echo '172.23.102.7   repository.services.rhone.zmhg' >> /etc/hosts
+        sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
+        apt-get update
+        curl -sSL https://get.docker.com/ | sh
+        usermod -aG docker adminomc
+        service docker start 
+        docker swarm init --advertise-addr eth0
+
+  setup_worker:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/sh
+        chage -d '' adminomc
+        echo '172.23.102.7   repository.services.rhone.zmhg' >> /etc/hosts
+        sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
+        apt-get update
+        curl -sSL https://get.docker.com/ | sh
+        usermod -aG docker adminomc
+        service docker start
+
+  cluster_master:
+    type: OS::Heat::ResourceGroup
+    properties:
+      # Should handle multi master later...
+      count: 1
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name: master%index%
+          key_name: {get_param: node_key}
+          flavor: {get_param: node_flavor}
+          image: {get_param: node_image}
+          user_data_format: RAW
+          user_data: {get_resource: setup_master}
+          networks:
+            - network: {get_param: network}
+
+  cluster_worker:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: number_of_worker}
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name: worker%index%
+          key_name: {get_param: node_key}
+          flavor: {get_param: node_flavor}
+          image: {get_param: node_image}
+          user_data_format: RAW
+          user_data: {get_resource: setup_worker}
+          networks:
+            - network: {get_param: network}
