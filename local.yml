@@ -6,6 +6,11 @@
 
   tasks:
     - shell: "touch /root/worked"
-      become: true
     - shell: "curl -sSL https://get.docker.com/ | sh"
-      become: true
+    - service:
+        name: docker
+        state: started
+    - user:
+        name: adminomc
+        groups: docker
+
