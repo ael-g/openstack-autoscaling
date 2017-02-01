@@ -1,0 +1,9 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+
+  tasks:
+    - include: tasks/installdocker.yml 
+    - shell: docker swarm init

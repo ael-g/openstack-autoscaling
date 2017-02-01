@@ -1,0 +1,9 @@
+---
+
+- shell: "curl -sSL https://get.docker.com/ | sh"
+- service:
+    name: docker
+    state: started
+- user:
+    name: adminomc
+    groups: docker

@@ -27,16 +27,17 @@ parameters:
     default: internal-run
 
 resources:
-  setup_ansible:
+  setup_node:
     type: OS::Heat::SoftwareConfig
     properties:
       config: |
         #!/bin/sh
         chage -d '' adminomc
         echo '172.23.102.7 repository.services.rhone.zmhg' >> /etc/hosts
+        sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
         apt-get update
-        apt-get install ansible
-        ansible-pull -U https://github.com/ael-g/openstack-autoscaling.git 
+        apt-get install -y ansible jq
+        ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq '.meta["ansible-role"]')
 
   cluster_master:
     type: OS::Heat::ResourceGroup
@@ -51,7 +52,8 @@ resources:
           flavor: {get_param: node_flavor}
           image: {get_param: node_image}
           user_data_format: RAW
-          user_data: {get_resource: setup_master}
+          user_data: {get_resource: setup_node}
+          metadata: {ansible-role: 'master.yml'}
           networks:
             - network: {get_param: network}
 
@@ -67,6 +69,7 @@ resources:
           flavor: {get_param: node_flavor}
           image: {get_param: node_image}
           user_data_format: RAW
-          user_data: {get_resource: setup_worker}
+          user_data: {get_resource: setup_node}
+          metadata: {ansible-playbook: 'worker.yml'}
           networks:
             - network: {get_param: network}
