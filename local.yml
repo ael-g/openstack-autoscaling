@@ -1,0 +1,11 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+
+  tasks:
+    - shell: "touch /root/worked"
+      become: true
+    - shell: "curl -sSL https://get.docker.com/ | sh"
+      become: true
