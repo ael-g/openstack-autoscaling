@@ -6,4 +6,4 @@
 
   tasks:
     - include: tasks/install-docker.yml 
-    - shell: docker swarm init
+    - shell: docker swarm init --advertise-addr eth0

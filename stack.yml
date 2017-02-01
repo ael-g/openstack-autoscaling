@@ -37,13 +37,12 @@ resources:
         sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
         apt-get update
         apt-get install -y ansible jq
-        ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq --raw-output '.meta["ansible-role"]')
+        ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq --raw-output '.meta["ansible-playbook"]')
 
   cluster_master:
     type: OS::Heat::ResourceGroup
     properties:
-      # Should handle multi master later...
-      count: 1
+      count: 2
       resource_def:
         type: OS::Nova::Server
         properties:
@@ -53,7 +52,7 @@ resources:
           image: {get_param: node_image}
           user_data_format: RAW
           user_data: {get_resource: setup_node}
-          metadata: {ansible-role: 'master.yml'}
+          metadata: {ansible-playbook: 'master.yml'}
           networks:
             - network: {get_param: network}
 
