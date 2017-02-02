@@ -6,4 +6,8 @@
 
   tasks:
     - include: tasks/install-docker.yml 
+    - action: uri
+        method=GET
+        url=http://169.254.169.254/openstack/latest/meta_data.json return_content=yes
+      register: metadata
     - shell: docker swarm init --advertise-addr eth0

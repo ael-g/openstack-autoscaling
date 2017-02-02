@@ -25,6 +25,9 @@ parameters:
     type: string
     label: Network name
     default: internal-run
+  etcd_cluster:
+    type: string
+    description: Hostnames of etcd clusters nodes
 
 resources:
   setup_node:
@@ -39,6 +42,11 @@ resources:
         apt-get install -y ansible jq
         ansible-pull -i 'localhost' -U https://github.com/ael-g/openstack-autoscaling.git $(curl http://169.254.169.254/openstack/latest/meta_data.json | jq --raw-output '.meta["ansible-playbook"]')
 
+  swarm_cluster_id:
+    type: OS::Heat::RandomString
+    properties:
+      length: 32
+
   cluster_manager:
     type: OS::Heat::ResourceGroup
     properties:
@@ -52,7 +60,11 @@ resources:
           image: {get_param: node_image}
           user_data_format: RAW
           user_data: {get_resource: setup_node}
-          metadata: {ansible-playbook: 'manager.yml'}
+          metadata: {
+            ansible-playbook: 'manager.yml', 
+            swarm-cluster-id: {get_param: [swarm_cluster_id, value]},
+            etcd-cluster: {get_param: [etcd-cluster]}
+          }
           networks:
             - network: {get_param: network}
 
@@ -69,6 +81,15 @@ resources:
           image: {get_param: node_image}
           user_data_format: RAW
           user_data: {get_resource: setup_node}
-          metadata: {ansible-playbook: 'worker.yml'}
+          metadata: {
+            ansible-playbook: 'manager.yml', 
+            swarm-cluster-id: {get_param: [swarm_cluster_id, value]},
+            etcd-cluster: {get_param: [etcd-cluster]}
+          }
           networks:
             - network: {get_param: network}
+
+outputs:
+  swarm_cluster_id:
+    description: Id for swarm key in etcd cluster
+    value: {get_param: [swarm_cluster_id, value]}

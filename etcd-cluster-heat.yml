@@ -1,0 +1,99 @@
+---
+
+heat_template_version: 2015-04-30
+
+description: Etcd cluster
+
+parameters:
+  node_name_pattern:
+    type: string
+    label: Like if you specify 'node', you'll have node1, node2, node3
+    default: node
+  project_domain:
+    type: string
+    label: Project domain for name resolution
+  number_of_node:
+    type: number
+    label: Number of node
+    default: 3
+  node_flavor:
+    type: string
+    label: Node flavor
+    default: t1.tiny.small-1
+  node_key:
+    type: string
+    label: Node ssh Key
+    default: ael
+  node_image:
+    type: string
+    label: Node image
+    default: "Ubuntu 16.04 Xenial Cloud (kvm)"
+  network:
+    type: string
+    label: Network name
+    default: internal-run
+
+resources:
+  setup_node:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: 
+        str_replace:
+          template: |
+            #!/bin/sh
+            chage -d '' adminomc
+            echo '172.23.102.7 repository.services.rhone.zmhg' >> /etc/hosts
+            apt-get update
+            apt-get install -y etcd
+            HOSTNAME_BASE=$node
+            HOSTNAME=$(hostname)
+            DOMAIN=$domain
+            FQDN=${HOSTNAME}${DOMAIN}
+            ETCD_INITIAL_CLUSTER=$(seq -s "," 0 2 | sed "s/\([0-9]\+\)/${HOSTNAME_BASE}\1=http:\/\/${HOSTNAME_BASE}\1${DOMAIN}:2380/g")
+
+            echo "
+            ETCD_INITIAL_CLUSTER=\"$ETCD_INITIAL_CLUSTER\"
+            ETCD_INITIAL_CLUSTER_STATE=\"new\"
+            ETCD_INITIAL_CLUSTER_STATE_TOKEN=\"zkCluster\"
+            ETCD_INITIAL_ADVERTISE_PEER_URLS=\"http://${FQDN}:2380\"
+            ETCD_DATA_DIR=\"/var/lib/etcd/default\"
+            ETCD_LISTEN_PEER_URLS=\"http://${FQDN}:2380\"
+            ETCD_LISTEN_CLIENT_URLS=\"http://${FQDN}:2379\"
+            ETCD_ADVERTISE_CLIENeR_URLS=\"http://${FQDN}:2380\"
+            ETCD_NAME=\"$HOSTNAME\"
+            " > /etc/default/etcd
+
+            service etcd start
+          params:
+            $domain: {get_param: project_domain}
+            $node: {get_param: node_name_pattern}
+
+  cluster_node:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: number_of_node}
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name: node%index%
+          key_name: {get_param: node_key}
+          flavor: {get_param: node_flavor}
+          image: {get_param: node_image}
+          user_data_format: RAW
+          user_data: {get_resource: setup_node}
+          networks:
+            - network: {get_param: network}
+outputs:
+  yaml_inventory:
+    description: YAML node inventory
+    value:
+      str_replace:
+        template: |
+          nodes:
+            - $nodes
+        params:
+          $nodes:
+            list_join:
+              - "\n  - "
+              - {get_attr: [cluster_node, show, name]}
+
