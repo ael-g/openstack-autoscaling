@@ -59,7 +59,7 @@ resources:
             ETCD_DATA_DIR=\"/var/lib/etcd/default\"
             ETCD_LISTEN_PEER_URLS=\"http://${FQDN}:2380\"
             ETCD_LISTEN_CLIENT_URLS=\"http://${FQDN}:2379\"
-            ETCD_ADVERTISE_CLIENeR_URLS=\"http://${FQDN}:2380\"
+            ETCD_ADVERTISE_CLIENT_URLS=\"http://${FQDN}:2380\"
             ETCD_NAME=\"$HOSTNAME\"
             " > /etc/default/etcd
 

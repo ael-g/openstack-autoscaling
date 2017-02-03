@@ -35,8 +35,6 @@ resources:
     properties:
       config: |
         #!/bin/sh
-        chage -d '' adminomc
-        echo '172.23.102.7 repository.services.rhone.zmhg' >> /etc/hosts
         sed -i 's/nameserver.*/nameserver 8.8.8.8/' /etc/resolv.conf
         apt-get update
         apt-get install -y ansible jq
