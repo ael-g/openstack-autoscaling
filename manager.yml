@@ -5,7 +5,7 @@
   gather_facts: yes
 
   tasks:
-#    - include: tasks/install-docker.yml
+    - include: tasks/install-docker.yml
     - uri:
         method: GET
         url: http://169.254.169.254/openstack/latest/meta_data.json
@@ -19,9 +19,23 @@
       register: manager_token
     - shell: docker swarm join-token worker --quiet
       register: worker_token
+
     - uri:
         method: PUT
-        url: "http://{{ metadata.etcd_cluster }}/v2/keys/{{ metadata.swarm_cluster_id }}"
-        body_format: json
-        body: "value=\"{'worker_token': '{{worker_token}}', 'manager_token': '{{manager_token}}', 'managers': ['{{manager}}']}\""
+        url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/worker_token"
+        status: 201
+        HEADER_Content-Type: "application/x-www-form-urlencoded"
+        body: value={{worker_token.stdout}}
+    - uri:
+        method: PUT
+        url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/manager_token"
+        status: 201
+        HEADER_Content-Type: "application/x-www-form-urlencoded"
+        body: value={{manager_token.stdout}}
+    - uri:
+        method: PUT
+        url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/manager"
+        status: 201
+        HEADER_Content-Type: "application/x-www-form-urlencoded"
+        body: value={{manager.stdout}}
 
