@@ -5,5 +5,23 @@
   gather_facts: yes
 
   tasks:
-    - include: tasks/install-docker.yml 
-#    - shell: docker swarm init
+    - include: tasks/install-docker.yml
+    - uri:
+        method: GET
+        url: http://169.254.169.254/openstack/latest/meta_data.json
+        status_code: 200
+        return_content: yes
+      register: metadata
+    - command: curl -I http://{{metadata.etcd_cluster}}:2379/v2/keys/{{metadata.swarm-cluster-id}}
+      register: result
+      until: result.stdout.find("200 OK") != -1
+      retries: 12
+      delay: 3
+      changed_when: false
+
+    - uri:
+        method: GET
+        url: http://192.168.10.93:2379/v2/keys/{{metadata.swarm-cluster-id}}
+        return_content: yes
+      register: swarm-cluster
+    - shell: docker swarm
