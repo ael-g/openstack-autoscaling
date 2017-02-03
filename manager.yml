@@ -5,7 +5,7 @@
   gather_facts: yes
 
   tasks:
-    - include: tasks/install-docker.yml 
+#    - include: tasks/install-docker.yml
     - uri:
         method: GET
         url: http://169.254.169.254/openstack/latest/meta_data.json
@@ -13,3 +13,15 @@
         return_content: yes
       register: metadata
     - shell: docker swarm init --advertise-addr eth0
+    - shell: docker swarm join-token manager | grep ':2377' | sed 's/ *//g'
+      register: manager
+    - shell: docker swarm join-token manager --quiet
+      register: manager_token
+    - shell: docker swarm join-token worker --quiet
+      register: worker_token
+    - uri:
+        method: PUT
+        url: "http://{{ metadata.etcd_cluster }}/v2/keys/{{ metadata.swarm_cluster_id }}"
+        body_format: json
+        body: "value=\"{'worker_token': '{{worker_token}}', 'manager_token': '{{manager_token}}', 'managers': ['{{manager}}']}\""
+

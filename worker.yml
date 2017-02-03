@@ -12,7 +12,7 @@
         status_code: 200
         return_content: yes
       register: metadata
-    - command: curl -I http://{{metadata.etcd_cluster}}:2379/v2/keys/{{metadata.swarm-cluster-id}}
+    - command: curl -I http://{{metadata.etcd_cluster}}:2379/v2/keys/{{metadata.swarm_cluster_id}}
       register: result
       until: result.stdout.find("200 OK") != -1
       retries: 12
@@ -21,7 +21,7 @@
 
     - uri:
         method: GET
-        url: http://192.168.10.93:2379/v2/keys/{{metadata.swarm-cluster-id}}
+        url: http://{{metadata.etcd_cluster}}/v2/keys/{{metadata.swarm_cluster_id}}
         return_content: yes
       register: swarm-cluster
     - shell: docker swarm

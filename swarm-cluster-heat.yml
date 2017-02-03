@@ -62,8 +62,8 @@ resources:
           user_data: {get_resource: setup_node}
           metadata: {
             ansible-playbook: 'manager.yml', 
-            swarm-cluster-id: {get_param: [swarm_cluster_id, value]},
-            etcd-cluster: {get_param: [etcd-cluster]}
+            swarm_cluster_id: {get_attr: [swarm_cluster_id, value]},
+            etcd_cluster: {get_param: etcd_cluster}
           }
           networks:
             - network: {get_param: network}
@@ -83,8 +83,8 @@ resources:
           user_data: {get_resource: setup_node}
           metadata: {
             ansible-playbook: 'manager.yml', 
-            swarm-cluster-id: {get_param: [swarm_cluster_id, value]},
-            etcd-cluster: {get_param: [etcd-cluster]}
+            swarm_cluster_id: {get_attr: [swarm_cluster_id, value]},
+            etcd_cluster: {get_param: etcd_cluster}
           }
           networks:
             - network: {get_param: network}
