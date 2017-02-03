@@ -12,16 +12,14 @@
         status_code: 200
         return_content: yes
       register: metadata
-    - command: curl -I http://{{metadata.json.meta.etcd_cluster}}/v2/keys/{{metadata.json.meta.swarm_cluster_id}}
-      register: result
-      until: result.stdout.find("200 OK") != -1
-      retries: 12
-      delay: 3
-      changed_when: false
-
     - uri:
         method: GET
-        url: http://{{metadata.json.meta.etcd_cluster}}/v2/keys/{{metadata.json.meta.swarm_cluster_id}}
+        url: http://{{metadata.json.meta.etcd_cluster}}/v2/keys/{{metadata.json.meta.swarm_cluster_id}}/worker_token
         return_content: yes
-      register: swarm-cluster
-    - shell: docker swarm
+      register: worker_token
+    - uri:
+        method: GET
+        url: http://{{metadata.json.meta.etcd_cluster}}/v2/keys/{{metadata.json.meta.swarm_cluster_id}}/manager
+        return_content: yes
+      register: manager
+    - shell: docker swarm join {{manager.json.node.value}} --token {{worker_token.json.node.value}}

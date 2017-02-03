@@ -70,6 +70,8 @@ resources:
 
   cluster_worker:
     type: OS::Heat::ResourceGroup
+    #  Should implement a wait_condition...
+    depends_on: [ cluster_manager ]
     properties:
       count: {get_param: number_of_worker}
       resource_def:

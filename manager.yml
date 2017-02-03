@@ -23,19 +23,19 @@
     - uri:
         method: PUT
         url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/worker_token"
-        status: 201
+        status_code: 200,201
         HEADER_Content-Type: "application/x-www-form-urlencoded"
         body: value={{worker_token.stdout}}
     - uri:
         method: PUT
         url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/manager_token"
-        status: 201
+        status_code: 200,201
         HEADER_Content-Type: "application/x-www-form-urlencoded"
         body: value={{manager_token.stdout}}
     - uri:
         method: PUT
         url: "http://{{ metadata.json.meta.etcd_cluster }}/v2/keys/{{ metadata.json.meta.swarm_cluster_id }}/manager"
-        status: 201
+        status_code: 200,201
         HEADER_Content-Type: "application/x-www-form-urlencoded"
         body: value={{manager.stdout}}
 
