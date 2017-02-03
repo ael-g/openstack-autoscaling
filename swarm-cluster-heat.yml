@@ -50,7 +50,7 @@ resources:
   cluster_manager:
     type: OS::Heat::ResourceGroup
     properties:
-      count: 2
+      count: 1
       resource_def:
         type: OS::Nova::Server
         properties:
@@ -84,7 +84,7 @@ resources:
           user_data_format: RAW
           user_data: {get_resource: setup_node}
           metadata: {
-            ansible-playbook: 'manager.yml', 
+            ansible-playbook: 'worker.yml',
             swarm_cluster_id: {get_attr: [swarm_cluster_id, value]},
             etcd_cluster: {get_param: etcd_cluster}
           }
